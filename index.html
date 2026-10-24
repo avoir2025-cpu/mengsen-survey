@@ -326,9 +326,9 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
         <div><span>一年旅費約</span><span class="num" id="nYear"></span></div>
       </div>
       <div class="need">
-        <p>透過萌森，一年只需要</p>
-        <div class="big num" id="nNeed"></div>
-        <span class="save" id="nSave"></span>
+        <p>透過萌森，每年可以省下</p>
+        <div class="big num" id="nSave"></div>
+        <span class="save" id="nNeed"></span>
       </div>
     </div>
 
@@ -341,9 +341,9 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
         <div><span>總預算</span><span class="num" id="rTotal"></span></div>
       </div>
       <div class="need">
-        <p>透過萌森，只需要</p>
-        <div class="big num" id="rNeed"></div>
-        <span class="save" id="rSave"></span>
+        <p>透過萌森，這趟可以省下</p>
+        <div class="big num" id="rSave"></div>
+        <span class="save" id="rNeed"></span>
       </div>
     </div>
 
@@ -448,8 +448,13 @@ async function api(payload) {
 }
 async function apiGet(uid) {
   if (!CONFIG.API_URL || !uid) return null;
-  const res = await fetch(CONFIG.API_URL + '?action=get&uid=' + encodeURIComponent(uid));
-  return res.json();
+  // 背景查詢，最多等 10 秒
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 10000);
+  try {
+    const res = await fetch(CONFIG.API_URL + '?action=get&uid=' + encodeURIComponent(uid), { signal: ctl.signal });
+    return await res.json();
+  } finally { clearTimeout(t); }
 }
 
 /* ===== 啟動 ===== */
@@ -483,15 +488,22 @@ async function boot() {
   // 同一個 LINE 帳號只有一張兌換卡
   let rec = loadLocal();
   if (rec && rec.uid !== S.uid) rec = null;
-  try {
-    const srv = await apiGet(S.uid);
-    if (srv && srv.ok && srv.record) rec = Object.assign({}, rec || {}, srv.record, { synced: true });
-  } catch (e) { /* 離線就用手機上的紀錄 */ }
-  if (rec) { S.record = rec; saveLocal(rec); if (!rec.synced) syncRecord(); }
+  if (rec) { S.record = rec; if (!rec.synced) syncRecord(); }
 
   buildForm();
   $('#loading').hidden = true;
   if (S.record) showResult(); else go(0);
+
+  // 試算表回應要幾秒，先顯示畫面，背景比對；換手機的回訪者查到紀錄就直接跳到兌換卡
+  try {
+    const srv = await apiGet(S.uid);
+    if (srv && srv.ok && srv.record) {
+      const hadRecord = !!S.record;
+      S.record = Object.assign({}, S.record || {}, srv.record, { synced: true });
+      saveLocal(S.record);
+      if (hadRecord) paintVoucher(); else showResult();
+    }
+  } catch (e) { /* 離線就用手機上的紀錄 */ }
 }
 function loadScript(src) {
   return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
@@ -734,8 +746,8 @@ function showResult() {
   $('#rPer').textContent = fmt(r.perPerson);
   $('#rPeople').textContent = r.people + ' 人';
   $('#rTotal').textContent = fmt(r.total);
-  $('#rNeed').textContent = fmt(r.need);
-  $('#rSave').textContent = '省下 ' + fmt(r.save) + '，離夢想更近一步';
+  $('#rSave').textContent = fmt(r.save);
+  $('#rNeed').textContent = '只要 ' + fmt(r.need) + '，離夢想更近一步';
   // 現在的旅行：一年次數 × 每次平均花費
   const trips = (parseInt(r.tripsDomestic, 10) || 0) + (parseInt(r.tripsOverseas, 10) || 0);
   const perTrip = CONFIG.SPEND_MID[r.spend] || 0;
@@ -745,8 +757,8 @@ function showResult() {
     $('#nTrips').textContent = trips + ' 次';
     $('#nPer').textContent = fmt(perTrip);
     $('#nYear').textContent = fmt(y.total);
-    $('#nNeed').textContent = fmt(y.need);
-    $('#nSave').textContent = '每年省下 ' + fmt(y.save);
+    $('#nSave').textContent = fmt(y.save);
+    $('#nNeed').textContent = '一年只要 ' + fmt(y.need);
   }
   paintVoucher();
   window.scrollTo({ top: 0 });
