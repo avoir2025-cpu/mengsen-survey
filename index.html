@@ -177,6 +177,7 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
 .vstate b{display:block;font-size:20px}
 .vstate .num{font-size:22px}
 .after{margin-top:16px;font-size:14px;color:var(--muted);text-align:center}
+.retest{display:block;margin:16px auto 0;font-size:14px;padding:8px 16px}
 
 .toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:40;max-width:88vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .loading{text-align:center;padding:80px 0;color:var(--muted)}
@@ -369,6 +370,7 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
         <div>兌換時間 <span class="num" id="vTime2"></span></div>
       </div>
     </div>
+    <button type="button" class="btn-ghost retest" id="retest" hidden>重新填一份（測試期間）</button>
     <p class="after">兌換後，櫃台會給你一張羅盤兌換券<br>拿到旁邊的航海羅盤轉一次 🧭<br>謝謝你和萌森一起支持家扶</p>
   </section>
 
@@ -521,6 +523,11 @@ function paintDemo() { $('#demoFriend').textContent = '好友：' + (S.friend ? 
 $('#demoFriend').onclick = () => {
   S.friend = !S.friend; try { localStorage.setItem(STORE_KEY + '_demo_friend', S.friend ? '1' : '0'); } catch (e) {}
   paintDemo(); paintFriend();
+};
+// 還沒接 LIFF 前可以無限次重填；接上 LIFF 後一個 LINE 帳號只有一張兌換卡，這顆按鈕自動消失
+$('#retest').onclick = () => {
+  try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(STORE_KEY + '_demo_uid'); } catch (e) {}
+  location.reload();
 };
 $('#demoReset').onclick = () => {
   try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(STORE_KEY + '_demo_uid'); } catch (e) {}
@@ -786,6 +793,7 @@ function showResult() {
     $('#nSave').textContent = fmt(y.save);
     $('#nNeed').textContent = '一年只要 ' + fmt(y.need);
   }
+  $('#retest').hidden = !S.demo;
   paintVoucher();
   window.scrollTo({ top: 0 });
   if (r.redeemedAt) $('#voucher').scrollIntoView({ block: 'start' });
