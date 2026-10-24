@@ -221,7 +221,6 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
         </div>
       </div>
     </div>
-    <p class="note">還沒加好友也可以先買：加好友 $90，填完問卷 $80</p>
   </section>
 
   <!-- 第 1 頁：關於你 -->
@@ -395,7 +394,7 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
 /* ===== 設定：上線前填這裡 ===== */
 const CONFIG = {
   LIFF_ID: '',                                  // LIFF ID；空白＝示範模式
-  OA_ADD_FRIEND_URL: 'https://line.me/R/ti/p/@xxxxxxx', // 萌森官方帳號的加好友連結
+  OA_ADD_FRIEND_URL: 'https://line.me/R/ti/p/%40779rizhy', // 萌森官方帳號 @779rizhy 的加好友連結
   API_URL: 'https://script.google.com/macros/s/AKfycbxrEfN74Sug78vyx10oJacK_pmJBFHV48a6Cl_enh-kV1fiZKTAnX30iFJneWVjkTnCIw/exec', // Google Apps Script 網址；空白＝只存在手機
   REDEEM_VALID_SEC: 180,                        // 按下兌換後的有效秒數
   REWARD_RATE: 0.25,                            // 回饋金最多 25%
@@ -443,8 +442,13 @@ function saveLocal(r) { try { localStorage.setItem(STORE_KEY, JSON.stringify(r))
 /* ===== 後端 ===== */
 async function api(payload) {
   if (!CONFIG.API_URL) return null;
-  const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(payload) });
-  return res.json();
+  // 試算表偶爾回得很慢，最多等 15 秒就放棄，之後再補送
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), 15000);
+  try {
+    const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(payload), signal: ctl.signal });
+    return await res.json();
+  } finally { clearTimeout(t); }
 }
 async function apiGet(uid) {
   if (!CONFIG.API_URL || !uid) return null;
@@ -466,7 +470,7 @@ async function boot() {
       $('#demoBar').hidden = !qs.has('demo'); // 網址加 ?demo 才顯示測試列
       let id = ''; try { id = localStorage.getItem(STORE_KEY + '_demo_uid') || ''; } catch (e) {}
       if (!id) { id = 'demo-' + Math.random().toString(36).slice(2, 10); try { localStorage.setItem(STORE_KEY + '_demo_uid', id); } catch (e) {} }
-      S.uid = id; S.displayName = '示範使用者';
+      S.uid = id; S.displayName = ''; // 接上 LIFF 後才讀得到 LINE 名稱
       let f = '1'; try { f = localStorage.getItem(STORE_KEY + '_demo_friend') ?? '1'; } catch (e) {}
       S.friend = f === '1';
       paintDemo();
@@ -488,7 +492,7 @@ async function boot() {
   // 同一個 LINE 帳號只有一張兌換卡
   let rec = loadLocal();
   if (rec && rec.uid !== S.uid) rec = null;
-  if (rec) { S.record = rec; if (!rec.synced) syncRecord(); }
+  if (rec) { S.record = rec; if (needsSync(rec)) syncRecord(); }
 
   buildForm();
   $('#loading').hidden = true;
@@ -499,7 +503,10 @@ async function boot() {
     const srv = await apiGet(S.uid);
     if (srv && srv.ok && srv.record) {
       const hadRecord = !!S.record;
+      const localRedeemed = S.record && S.record.redeemedAt;
       S.record = Object.assign({}, S.record || {}, srv.record, { synced: true });
+      if (srv.record.redeemedAt) S.record.redeemSynced = true;
+      else if (localRedeemed) { S.record.redeemedAt = localRedeemed; S.record.redeemSynced = false; syncRecord(); }
       saveLocal(S.record);
       if (hadRecord) paintVoucher(); else showResult();
     }
@@ -720,19 +727,38 @@ async function submit() {
     consent: true, submittedAt: new Date().toISOString(), redeemedAt: null, synced: false
   };
   S.record = rec; saveLocal(rec);
-  await syncRecord();
+  // 先給客人看結果，資料在背景送到試算表，不讓排隊的人等
   showResult();
+  syncRecord();
 }
 async function syncRecord() {
   const rec = S.record;
-  if (!rec || !CONFIG.API_URL) return;
+  if (!rec || !CONFIG.API_URL || syncRecord.busy) return;
+  syncRecord.busy = true;
+  try { await syncOnce(rec); } finally { syncRecord.busy = false; }
+}
+function needsSync(rec) { return rec && (!rec.synced || (rec.redeemedAt && !rec.redeemSynced)); }
+async function syncOnce(rec) {
   try {
-    const r = await api({ action: 'submit', idToken: S.idToken, record: rec });
-    if (r && r.ok) {
+    if (!rec.synced) {
+      const localRedeemed = rec.redeemedAt;
+      const r = await api({ action: 'submit', idToken: S.idToken, record: rec });
+      if (!(r && r.ok)) return;
       if (r.record) Object.assign(rec, r.record);
-      rec.synced = true; saveLocal(rec);
+      if (localRedeemed && !rec.redeemedAt) rec.redeemedAt = localRedeemed; // 送出途中按了兌換，以手機為準
+      rec.synced = true;
+      if (r.record && r.record.redeemedAt) rec.redeemSynced = true;
+      saveLocal(rec);
     }
-  } catch (e) { /* 網路不穩時先存在手機，下次開啟再補送 */ }
+    if (rec.redeemedAt && !rec.redeemSynced) {
+      const res = await api({ action: 'redeem', id: rec.id, uid: rec.uid, redeemedAt: rec.redeemedAt });
+      if (res && res.ok) {
+        if (res.redeemedAt) rec.redeemedAt = res.redeemedAt;
+        rec.redeemSynced = true; saveLocal(rec);
+      }
+    }
+    paintVoucher();
+  } catch (e) { /* 網路不穩時先存在手機，稍後再補送 */ }
 }
 
 /* ===== 結果與兌換 ===== */
@@ -783,15 +809,12 @@ function paintVoucher() {
 }
 $('#redeemBtn').onclick = async () => {
   const r = S.record; if (!r || r.redeemedAt) return;
-  r.redeemedAt = new Date().toISOString(); saveLocal(r); paintVoucher();
-  if (!CONFIG.API_URL) return;
-  try {
-    if (!r.synced) await syncRecord();
-    const res = await api({ action: 'redeem', id: r.id, uid: r.uid, redeemedAt: r.redeemedAt });
-    if (res && res.ok && res.redeemedAt && res.redeemedAt !== r.redeemedAt) { r.redeemedAt = res.redeemedAt; saveLocal(r); paintVoucher(); }
-  } catch (e) { /* 兌換以手機上的時間為準 */ }
+  r.redeemedAt = new Date().toISOString(); r.redeemSynced = false; saveLocal(r); paintVoucher();
+  syncRecord(); // 兌換以手機上的時間為準，背景送到試算表
 };
 setInterval(() => { if (!$('#sR').hidden) paintVoucher(); }, 1000);
+// 還沒送進試算表的，每 20 秒再試一次
+setInterval(() => { if (needsSync(S.record)) syncRecord(); }, 20000);
 
 boot();
 </script>
