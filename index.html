@@ -147,6 +147,7 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
 .need{margin-top:16px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.25);position:relative}
 .need p{font-size:15px;color:#D6E3EE}
 .need .big{font-size:46px;line-height:1.1;color:var(--orange);margin:2px 0 6px}
+.need .cheer{margin-top:14px;font-size:17px;font-weight:700;color:var(--sand)}
 .need .save{display:inline-block;background:rgba(242,154,79,.18);color:var(--sand);border-radius:999px;padding:4px 12px;font-size:14px;font-weight:700}
 .nowres{background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:22px 20px;margin-bottom:14px}
 .nowres .eyebrow{font-size:13px;font-weight:700;color:var(--blue);letter-spacing:.1em;margin-bottom:10px}
@@ -343,6 +344,7 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
         <p>透過萌森，這趟可以省下</p>
         <div class="big num" id="rSave"></div>
         <span class="save" id="rNeed"></span>
+        <p class="cheer">萌森陪你一起，加速達成夢想</p>
       </div>
     </div>
 
@@ -781,7 +783,7 @@ function showResult() {
   $('#rPeople').textContent = r.people + ' 人';
   $('#rTotal').textContent = fmt(r.total);
   $('#rSave').textContent = fmt(r.save);
-  $('#rNeed').textContent = '只要 ' + fmt(r.need) + '，離夢想更近一步';
+  $('#rNeed').textContent = '只要 ' + fmt(r.need);
   // 現在的旅行：一年次數 × 每次平均花費
   const trips = (parseInt(r.tripsDomestic, 10) || 0) + (parseInt(r.tripsOverseas, 10) || 0);
   const perTrip = CONFIG.SPEND_MID[r.spend] || 0;
