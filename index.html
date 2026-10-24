@@ -52,16 +52,18 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
 .hero:before{width:220px;height:220px;right:-70px;bottom:-90px;background:#EDCB5C;opacity:.16}
 .hero:after{width:90px;height:90px;right:26px;top:-24px;background:#4FA3D9;opacity:.3}
 .hero .eyebrow{font-size:13px;font-weight:700;color:var(--sand);letter-spacing:.1em}
-.hero h1{font-size:34px;line-height:1.2;font-weight:900;margin:8px 0 10px;position:relative}
+.hero h1{font-size:clamp(26px,8vw,34px);line-height:1.2;font-weight:900;margin:8px 0 4px;position:relative;white-space:nowrap}
 .hero p{color:#D6E3EE;font-size:16px;position:relative}
 .perks{display:grid;gap:10px;margin-top:20px;position:relative}
 .perk{display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.08);border-radius:14px;padding:12px 14px}
 .perk i{font-style:normal;font-size:22px;width:28px;text-align:center}
 .perk b{display:block;font-size:16px}
 .perk small{color:#BFD3E3;font-size:13px}
-.price{display:inline-flex;align-items:baseline;gap:6px}
-.price s{color:#9DB3C6}
-.price .num{color:var(--orange);font-size:22px}
+.perk-main{background:rgba(235,198,96,.14);border:1px solid rgba(235,198,96,.45)}
+.deal{display:flex;align-items:baseline;gap:10px;margin-top:2px}
+.deal s{color:#9DB3C6;font-size:20px}
+.deal .arrow{color:var(--sand);font-size:18px}
+.deal .num:last-child{color:var(--orange);font-size:40px;line-height:1}
 
 .card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
 .friend{margin-top:14px;display:flex;gap:12px;align-items:flex-start}
@@ -183,12 +185,11 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
     <div class="hero">
       <div class="badge"><img src="logo.svg" alt="萌森" onerror="this.parentNode.remove()"></div>
       <div class="eyebrow">2026 家扶南高雄愛心園遊會</div>
-      <h1>萌森小水手<br>補給站</h1>
-      <p>填完 8 題旅遊問卷，大約 90 秒</p>
+      <h1>萌森小水手補給站</h1>
       <div class="perks">
-        <div class="perk"><i>🧇</i><div><b>補給組合 <span class="price"><s>$100</s><span class="num">$80</span></span></b><small>雞蛋仔＋鋁箔包飲料</small></div></div>
+        <div class="perk perk-main"><i>🧇</i><div><b>補給套餐</b><span class="deal"><s class="num">$100</s><span class="arrow">→</span><span class="num">$80</span></span></div></div>
         <div class="perk"><i>🧭</i><div><b>再送航海羅盤 1 次</b><small>轉到什麼，帶走什麼</small></div></div>
-        <div class="perk"><i>🌌</i><div><b>算出你的夢想旅程</b><small>看看透過萌森只需要多少</small></div></div>
+        <div class="perk"><i>🌌</i><div><b>夢想旅程試算</b><small>極光、大峽谷，離你有多近？</small></div></div>
       </div>
     </div>
     <div class="card friend wait" id="friendBox">
@@ -221,7 +222,7 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
       <p class="err" id="e-phone"></p>
     </div>
     <div class="q">
-      <span class="qt">3．出生年月日 <small>生日當月送上旅遊祝福</small></span>
+      <span class="qt">3．出生年月日</span>
       <div class="bday">
         <select class="field" id="by" aria-label="出生年"><option value="">年</option></select>
         <select class="field" id="bm" aria-label="出生月"><option value="">月</option></select>
@@ -253,8 +254,8 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
       <p class="err" id="e-trips"></p>
     </div>
     <div class="q">
-      <span class="qt">6．每年旅遊花費大約多少？ <small>全家合計</small></span>
-      <div class="chips" data-key="spend" data-opts="3 萬以下|3–6 萬|6–10 萬|10–20 萬|20 萬以上"></div>
+      <span class="qt">6．每次出遊平均花多少？ <small>全家合計</small></span>
+      <div class="chips" data-key="spend" data-opts="1 萬以下|1–3 萬|3–5 萬|5–10 萬|10 萬以上"></div>
       <p class="err" id="e-spend"></p>
     </div>
     <div class="q">
@@ -321,7 +322,7 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
         <div><i>✓</i>已加入萌森好友</div>
         <div><i>✓</i>已完成旅遊問卷</div>
       </div>
-      <div class="offer">補給組合 <span class="num">$80</span></div>
+      <div class="offer">補給套餐 <span class="num">$80</span></div>
       <div class="offer2">＋ 航海羅盤 1 次</div>
       <div class="clock num" id="clock">--:--:--</div>
       <div id="vAction">
@@ -367,14 +368,20 @@ const CONFIG = {
   API_URL: '',                                  // Google Apps Script 網址；空白＝只存在手機
   REDEEM_VALID_SEC: 180,                        // 按下兌換後的有效秒數
   REWARD_RATE: 0.25,                            // 回饋金最多 25%
-  // perPerson：每人參考預算（元），請萌森依實際行程提供；null＝讓客人自己填
+  // 目的地＝Hotels.com 國人「此生必遊」前 10 名（OnePoll 2017 調查）
+  // perPerson：每人參考預算（元），依 2026/10 雄獅旅遊同類團費取整；萌森可換成自家行程價
   DREAMS: [
-    { id: 'aurora', label: '北歐看極光',     phrase: '去北歐看極光',       emoji: '🌌', perPerson: 200000 },
-    { id: 'japan',  label: '日本賞櫻滑雪',   phrase: '去日本賞櫻滑雪',     emoji: '🌸', perPerson: null },
-    { id: 'swiss',  label: '瑞士阿爾卑斯',   phrase: '去瑞士看阿爾卑斯山', emoji: '🏔️', perPerson: null },
-    { id: 'africa', label: '非洲動物大遷徙', phrase: '去非洲看動物大遷徙', emoji: '🦒', perPerson: null },
-    { id: 'nz',     label: '紐澳自駕',       phrase: '去紐澳自駕',         emoji: '🚐', perPerson: null },
-    { id: 'other',  label: '其他，自己填',   phrase: '',                   emoji: '✏️', perPerson: null }
+    { id: 'aurora',   label: '北歐看極光',   phrase: '去北歐看極光',             emoji: '🌌', perPerson: 170000 }, // 冰島極光 10 日 16.3–17.1 萬
+    { id: 'canyon',   label: '美國大峽谷',   phrase: '搭直升機飛越美國大峽谷',   emoji: '🚁', perPerson: 100000 }, // 美西 9–10 日 8.8–9.2 萬＋直升機
+    { id: 'niagara',  label: '尼加拉大瀑布', phrase: '去看尼加拉大瀑布',         emoji: '💦', perPerson: 120000 }, // 美東 10 日 10.8–12 萬
+    { id: 'reef',     label: '澳洲大堡礁',   phrase: '去澳洲大堡礁潛水',         emoji: '🐠', perPerson: 120000 }, // 凱恩斯 9 日 11.9–13.6 萬
+    { id: 'liberty',  label: '紐約自由女神', phrase: '去紐約看自由女神',         emoji: '🗽', perPerson: 120000 }, // 美東 10 日
+    { id: 'polar',    label: '南極探險',     phrase: '去南極探險',               emoji: '🐧', perPerson: 800000 }, // 南極團約 70–100 萬
+    { id: 'paris',    label: '巴黎鐵塔',     phrase: '登上巴黎鐵塔',             emoji: '🗼', perPerson: 100000 }, // 法國 8–10 日 6.4–12 萬
+    { id: 'machu',    label: '秘魯馬丘比丘', phrase: '去秘魯看馬丘比丘',         emoji: '⛰️', perPerson: 270000 }, // 秘魯 13 日 27 萬
+    { id: 'wall',     label: '北京長城',     phrase: '去北京爬長城',             emoji: '🏯', perPerson: 40000 },  // 北京自由行 5 日約 3.8 萬
+    { id: 'broadway', label: '紐約百老匯',   phrase: '去紐約看百老匯',           emoji: '🎭', perPerson: 120000 }, // 美東 10 日
+    { id: 'other',    label: '其他，自己填', phrase: '',                         emoji: '✏️', perPerson: null }
   ]
 };
 const STORE_KEY = 'mengsen_bazaar_2026';
@@ -418,7 +425,7 @@ async function boot() {
   S.demo = !CONFIG.LIFF_ID || qs.has('demo');
   try {
     if (S.demo) {
-      $('#demoBar').hidden = false;
+      $('#demoBar').hidden = !qs.has('demo'); // 網址加 ?demo 才顯示測試列
       let id = ''; try { id = localStorage.getItem(STORE_KEY + '_demo_uid') || ''; } catch (e) {}
       if (!id) { id = 'demo-' + Math.random().toString(36).slice(2, 10); try { localStorage.setItem(STORE_KEY + '_demo_uid', id); } catch (e) {} }
       S.uid = id; S.displayName = '示範使用者';
@@ -553,7 +560,7 @@ function pickDream(d) {
   $('#dreams').classList.remove('bad'); $('#e-dream').textContent = '';
   $('#budgetBox').hidden = false;
   $('#otherBox').hidden = d.id !== 'other';
-  $('#budgetHint').textContent = d.perPerson ? '已帶入參考預算，可以自己改' : '';
+  $('#budgetHint').textContent = d.perPerson ? '已帶入參考團費，可以自己改' : '';
   if (!S.budgetTouched || !$('#budget').value) {
     $('#budget').value = d.perPerson ? String(d.perPerson / 10000) : '';
     S.budgetTouched = false;
