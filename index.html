@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#13324D">
+<meta name="robots" content="noindex">
+<title>萌森小水手補給站</title>
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<style>
+[hidden]{display:none!important}
+:root{
+  --navy:#13324D;--navy2:#1B4A6E;--cream:#FBF7EE;--paper:#FFFDF8;--line:#E6DCC8;
+  --blue:#1F6AA5;--sky:#EEF4F8;--orange:#EBC660;--orange-d:#A86F12;--sand:#EFD9A6;
+  --gold:linear-gradient(135deg,#C99A3A 0%,#EDCB5C 45%,#D9A93F 100%);
+  --ink:#2E3D4F;--muted:#5E6C7B;--ok:#23845A;--err:#B93A2B;
+  --radius:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Noto Sans TC',-apple-system,BlinkMacSystemFont,'PingFang TC','Microsoft JhengHei',sans-serif;background:var(--cream);color:var(--ink);font-size:16px;line-height:1.6;min-height:100dvh;-webkit-tap-highlight-color:transparent}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+.num{font-family:'Fredoka','Noto Sans TC',sans-serif;font-weight:600;letter-spacing:.01em}
+
+/* 示範模式 */
+.demo{position:sticky;top:0;z-index:30;background:#FFF3C4;color:#5A4500;font-size:13px;padding:8px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.demo button{background:#fff;border:1px solid #D9C27A;border-radius:999px;padding:3px 10px;font-size:13px}
+
+.wrap{max-width:480px;margin:0 auto;padding:16px 16px calc(116px + env(safe-area-inset-bottom))}
+.wrap.no-bar{padding-bottom:calc(32px + env(safe-area-inset-bottom))}
+.brand{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:4px 2px 14px;font-size:13px;color:var(--muted)}
+.brand b{color:var(--navy);font-weight:700}
+.brand .who{display:flex;align-items:center;gap:8px}
+.brand img{width:30px;height:30px;object-fit:contain}
+.badge{position:relative;width:64px;height:64px;border-radius:50%;background:#fff;display:grid;place-items:center;margin-bottom:14px;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+.badge img{width:50px;height:50px;object-fit:contain}
+
+/* 進度 */
+.progress{display:flex;gap:6px;margin:0 2px 18px}
+.progress span{flex:1;height:6px;border-radius:6px;background:#E3DCCD;transition:background .3s}
+.progress span.on{background:var(--blue)}
+.step-label{font-size:14px;font-weight:700;color:var(--blue);letter-spacing:.08em;margin:0 2px 4px}
+h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin:0 2px 18px}
+
+/* 開場 */
+.hero{position:relative;overflow:hidden;background:linear-gradient(150deg,var(--navy),var(--navy2));color:var(--cream);border-radius:24px;padding:28px 22px 24px}
+.hero:before,.hero:after{content:"";position:absolute;border-radius:50%}
+.hero:before{width:220px;height:220px;right:-70px;bottom:-90px;background:#EDCB5C;opacity:.16}
+.hero:after{width:90px;height:90px;right:26px;top:-24px;background:#4FA3D9;opacity:.3}
+.hero .eyebrow{font-size:13px;font-weight:700;color:var(--sand);letter-spacing:.1em}
+.hero h1{font-size:34px;line-height:1.2;font-weight:900;margin:8px 0 10px;position:relative}
+.hero p{color:#D6E3EE;font-size:16px;position:relative}
+.perks{display:grid;gap:10px;margin-top:20px;position:relative}
+.perk{display:flex;gap:12px;align-items:center;background:rgba(255,255,255,.08);border-radius:14px;padding:12px 14px}
+.perk i{font-style:normal;font-size:22px;width:28px;text-align:center}
+.perk b{display:block;font-size:16px}
+.perk small{color:#BFD3E3;font-size:13px}
+.price{display:inline-flex;align-items:baseline;gap:6px}
+.price s{color:#9DB3C6}
+.price .num{color:var(--orange);font-size:22px}
+
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
+.friend{margin-top:14px;display:flex;gap:12px;align-items:flex-start}
+.friend .dot{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:900;color:#fff;font-size:15px;margin-top:2px}
+.friend.ok .dot{background:var(--ok)}
+.friend.no .dot{background:var(--orange-d)}
+.friend.wait .dot{background:#AAB6C2}
+.friend b{display:block;color:var(--navy)}
+.friend p{font-size:14px;color:var(--muted)}
+.friend .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.btn-line{background:#06C755;color:#fff;border-radius:999px;padding:10px 18px;font-weight:700;font-size:15px}
+.btn-ghost{border:1.5px solid var(--blue);color:var(--blue);border-radius:999px;padding:9px 16px;font-weight:700;font-size:15px}
+.note{font-size:13px;color:var(--muted);text-align:center;margin-top:14px}
+
+/* 題目 */
+.q{margin-bottom:22px}
+.q > label,.q .qt{display:block;font-weight:700;color:var(--navy);font-size:17px;margin:0 2px 8px}
+.q .qt small,.q > label small{font-weight:400;color:var(--muted);font-size:14px;margin-left:4px}
+.field{width:100%;height:52px;border:1.5px solid #D8CFBD;background:#fff;border-radius:14px;padding:0 14px;font-size:17px;outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none}
+.field:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(31,106,165,.15)}
+.field.bad{border-color:var(--err)}
+.err{color:var(--err);font-size:14px;margin:6px 2px 0;min-height:0}
+.bday{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
+.bday select{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%235E6C7B' stroke-width='2'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:30px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:46px;padding:0 16px;border-radius:999px;border:1.5px solid #D8CFBD;background:#fff;font-size:16px;font-weight:500;transition:all .15s}
+.chip[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:#fff}
+.chips.bad .chip{border-color:var(--err)}
+.sub{font-size:14px;color:var(--muted);margin:10px 2px 6px}
+.stepper{display:flex;align-items:center;justify-content:space-between;background:#fff;border:1.5px solid #D8CFBD;border-radius:14px;padding:6px}
+.stepper button{width:48px;height:44px;border-radius:10px;background:var(--sky);font-size:24px;font-weight:700;color:var(--navy)}
+.stepper button:disabled{opacity:.35}
+.stepper output{font-size:20px;font-weight:700;color:var(--navy)}
+
+/* 夢想 */
+.dreams{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dream{position:relative;text-align:left;border-radius:16px;border:1.5px solid #D8CFBD;background:#fff;padding:14px 12px;min-height:96px;display:flex;flex-direction:column;justify-content:space-between;gap:6px;transition:all .15s}
+.dream .em{font-size:28px;line-height:1}
+.dream b{font-size:15px;line-height:1.35;color:var(--navy)}
+.dream small{font-size:12px;color:var(--muted)}
+.dream[aria-pressed="true"]{background:var(--navy);border-color:var(--navy)}
+.dream[aria-pressed="true"] b{color:#fff}
+.dream[aria-pressed="true"] small{color:var(--sand)}
+.dreams.bad .dream{border-color:var(--err)}
+.budget{margin-top:14px;background:var(--sky);border-radius:16px;padding:16px}
+.unit{position:relative}
+.unit .field{padding-right:52px;font-size:20px;font-weight:700}
+.unit span{position:absolute;right:16px;top:50%;transform:translateY(-50%);color:var(--muted);font-weight:700}
+.live{margin-top:12px;font-size:15px;color:var(--ink)}
+.live .num{color:var(--orange-d);font-size:18px}
+.consent{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1.5px solid #D8CFBD;border-radius:14px;padding:14px;font-size:14px;color:var(--muted);line-height:1.6}
+.consent input{flex:none;width:24px;height:24px;margin-top:1px;accent-color:var(--navy)}
+.consent.bad{border-color:var(--err)}
+
+/* 底部按鈕列 */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(251,247,238,.94);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom))}
+.bar .in{max-width:480px;margin:0 auto;display:flex;gap:10px}
+.bar .back{flex:none;width:56px;height:54px;border-radius:16px;background:var(--sky);color:var(--navy);font-size:22px;font-weight:700}
+.bar .next{flex:1;height:54px;border-radius:16px;background:var(--gold);color:var(--navy);font-size:18px;font-weight:900;box-shadow:0 6px 16px rgba(168,111,18,.28);transition:opacity .2s}
+.bar .next:disabled{opacity:.45;box-shadow:none}
+
+/* 結果 */
+.dreamres{background:linear-gradient(150deg,var(--navy),var(--navy2));color:var(--cream);border-radius:24px;padding:24px 20px;position:relative;overflow:hidden}
+.dreamres:after{content:"";position:absolute;width:200px;height:200px;border-radius:50%;right:-80px;top:-80px;background:var(--orange);opacity:.15}
+.dreamres .eyebrow{font-size:13px;font-weight:700;color:var(--sand);letter-spacing:.1em}
+.dreamres h3{font-size:22px;line-height:1.4;font-weight:900;margin:6px 0 14px;position:relative}
+.rows{display:grid;gap:6px;font-size:15px;color:#D6E3EE;position:relative}
+.rows div{display:flex;justify-content:space-between;gap:12px}
+.rows .num{color:#fff;font-size:17px;font-weight:500}
+.need{margin-top:16px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.25);position:relative}
+.need p{font-size:15px;color:#D6E3EE}
+.need .big{font-size:46px;line-height:1.1;color:var(--orange);margin:2px 0 6px}
+.need .save{display:inline-block;background:rgba(242,154,79,.18);color:var(--sand);border-radius:999px;padding:4px 12px;font-size:14px;font-weight:700}
+.fine{font-size:12px;color:#9DB3C6;margin-top:12px;position:relative}
+
+.voucher{margin-top:16px;background:#fff;border:3px solid var(--navy);border-radius:26px;padding:20px 18px;scroll-margin-top:16px}
+.voucher .vt{font-size:13px;font-weight:700;color:var(--blue);letter-spacing:.06em}
+.checks{display:grid;gap:8px;margin:12px 0 14px}
+.checks div{display:flex;gap:10px;align-items:center;font-size:17px;font-weight:500}
+.checks i{font-style:normal;width:26px;height:26px;border-radius:50%;background:var(--blue);color:#fff;display:grid;place-items:center;font-size:14px;font-weight:900}
+.offer{font-size:24px;font-weight:900;color:var(--navy)}
+.offer .num{color:var(--orange-d);font-size:30px}
+.offer2{font-size:18px;font-weight:700;color:var(--blue);margin-top:2px}
+.clock{display:flex;align-items:center;justify-content:center;gap:8px;margin:14px 0 12px;font-size:34px;color:var(--orange-d)}
+.clock:before{content:"";width:10px;height:10px;border-radius:50%;background:var(--ok);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+.redeem{width:100%;height:58px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:19px;font-weight:900;box-shadow:0 6px 16px rgba(168,111,18,.28)}
+.redeem:active{transform:scale(.98)}
+.vhint{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}
+.vstate{border-radius:16px;padding:14px;text-align:center}
+.vstate.live{background:#E6F4EC;color:var(--ok)}
+.vstate.done{background:#ECEFF2;color:var(--muted)}
+.vstate b{display:block;font-size:20px}
+.vstate .num{font-size:22px}
+.after{margin-top:16px;font-size:14px;color:var(--muted);text-align:center}
+
+.toast{position:fixed;left:50%;bottom:calc(92px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;z-index:40;max-width:88vw;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.loading{text-align:center;padding:80px 0;color:var(--muted)}
+.fade{animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (min-width:520px){.wrap{padding-top:28px}}
+</style>
+</head>
+<body>
+
+<div class="demo" id="demoBar" hidden>
+  <span>示範模式（資料只存在這支手機）</span>
+  <button type="button" id="demoFriend">好友：已加入</button>
+  <button type="button" id="demoReset">清除重來</button>
+</div>
+
+<main class="wrap" id="wrap">
+  <div class="brand"><span class="who"><img src="logo.svg" alt="" onerror="this.remove()"><span><b>萌森旅遊平台</b> × 家扶愛心園遊會</span></span><span>11/15</span></div>
+
+  <div class="loading" id="loading">載入中…</div>
+
+  <!-- 開場 -->
+  <section id="s0" hidden>
+    <div class="hero">
+      <div class="badge"><img src="logo.svg" alt="萌森" onerror="this.parentNode.remove()"></div>
+      <div class="eyebrow">2026 家扶南高雄愛心園遊會</div>
+      <h1>萌森小水手<br>補給站</h1>
+      <p>填完 8 題旅遊問卷，大約 90 秒</p>
+      <div class="perks">
+        <div class="perk"><i>🧇</i><div><b>補給組合 <span class="price"><s>$100</s><span class="num">$80</span></span></b><small>雞蛋仔＋鋁箔包飲料</small></div></div>
+        <div class="perk"><i>🧭</i><div><b>再送航海羅盤 1 次</b><small>轉到什麼，帶走什麼</small></div></div>
+        <div class="perk"><i>🌌</i><div><b>算出你的夢想旅程</b><small>看看透過萌森只需要多少</small></div></div>
+      </div>
+    </div>
+    <div class="card friend wait" id="friendBox">
+      <div class="dot" id="friendDot">…</div>
+      <div>
+        <b id="friendTitle">確認好友狀態中</b>
+        <p id="friendText">請稍候</p>
+        <div class="acts" id="friendActs" hidden>
+          <button type="button" class="btn-line" id="addFriend">加入萌森好友</button>
+          <button type="button" class="btn-ghost" id="recheck">我加好了</button>
+        </div>
+      </div>
+    </div>
+    <p class="note">還沒加好友也可以先買：加好友 $90，填完問卷 $80</p>
+  </section>
+
+  <!-- 第 1 頁：關於你 -->
+  <section id="s1" hidden>
+    <div class="progress"><span class="on"></span><span></span><span></span></div>
+    <div class="step-label">1／3　關於你</div>
+    <h2 class="title">先認識一下你</h2>
+    <div class="q">
+      <label for="name">1．姓名</label>
+      <input class="field" id="name" type="text" autocomplete="name" maxlength="30" placeholder="王小明">
+      <p class="err" id="e-name"></p>
+    </div>
+    <div class="q">
+      <label for="phone">2．手機號碼</label>
+      <input class="field" id="phone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="12" placeholder="0912345678">
+      <p class="err" id="e-phone"></p>
+    </div>
+    <div class="q">
+      <span class="qt">3．出生年月日 <small>生日當月送上旅遊祝福</small></span>
+      <div class="bday">
+        <select class="field" id="by" aria-label="出生年"><option value="">年</option></select>
+        <select class="field" id="bm" aria-label="出生月"><option value="">月</option></select>
+        <select class="field" id="bd" aria-label="出生日"><option value="">日</option></select>
+      </div>
+      <p class="err" id="e-bday"></p>
+    </div>
+  </section>
+
+  <!-- 第 2 頁：現在的旅行 -->
+  <section id="s2" hidden>
+    <div class="progress"><span class="on"></span><span class="on"></span><span></span></div>
+    <div class="step-label">2／3　現在的旅行</div>
+    <h2 class="title">你家平常怎麼玩？</h2>
+    <div class="q">
+      <span class="qt">4．全家出遊通常幾個人？</span>
+      <div class="stepper">
+        <button type="button" id="pMinus" aria-label="減少一人">−</button>
+        <output id="people" aria-live="polite">4 人</output>
+        <button type="button" id="pPlus" aria-label="增加一人">＋</button>
+      </div>
+    </div>
+    <div class="q">
+      <span class="qt">5．一年出遊幾次？</span>
+      <p class="sub">國內</p>
+      <div class="chips" data-key="tripsDomestic" data-opts="0 次|1 次|2 次|3 次|4 次以上"></div>
+      <p class="sub">國外</p>
+      <div class="chips" data-key="tripsOverseas" data-opts="0 次|1 次|2 次|3 次以上"></div>
+      <p class="err" id="e-trips"></p>
+    </div>
+    <div class="q">
+      <span class="qt">6．每年旅遊花費大約多少？ <small>全家合計</small></span>
+      <div class="chips" data-key="spend" data-opts="3 萬以下|3–6 萬|6–10 萬|10–20 萬|20 萬以上"></div>
+      <p class="err" id="e-spend"></p>
+    </div>
+    <div class="q">
+      <span class="qt">7．下一趟大概什麼時候出發？</span>
+      <div class="chips" data-key="nextTrip" data-opts="3 個月內|半年內|一年內|還沒想"></div>
+      <p class="err" id="e-nextTrip"></p>
+    </div>
+  </section>
+
+  <!-- 第 3 頁：夢想的旅行 -->
+  <section id="s3" hidden>
+    <div class="progress"><span class="on"></span><span class="on"></span><span class="on"></span></div>
+    <div class="step-label">3／3　夢想的旅行</div>
+    <h2 class="title">最想帶全家去哪裡？</h2>
+    <div class="q">
+      <span class="qt">8．選一個夢想目的地</span>
+      <div class="dreams" id="dreams"></div>
+      <p class="err" id="e-dream"></p>
+      <div class="budget" id="budgetBox" hidden>
+        <div class="q" id="otherBox" hidden style="margin-bottom:14px">
+          <label for="dreamOther">想去哪裡？</label>
+          <input class="field" id="dreamOther" type="text" maxlength="30" placeholder="例如：冰島自駕">
+          <p class="err" id="e-other"></p>
+        </div>
+        <label for="budget" class="qt">每人預算大約多少？ <small id="budgetHint"></small></label>
+        <div class="unit">
+          <input class="field" id="budget" type="text" inputmode="decimal" maxlength="6" placeholder="例如 20">
+          <span>萬</span>
+        </div>
+        <p class="err" id="e-budget"></p>
+        <p class="live" id="live"></p>
+      </div>
+    </div>
+    <div class="q">
+      <label class="consent" id="consentBox">
+        <input type="checkbox" id="consent">
+        <span>您提供的資料，將由萌森旅遊平台及合作夥伴用於聯繫旅遊優惠、分享會與活動資訊。您可以隨時要求查詢、更正或刪除。<b style="color:var(--navy)">我已閱讀並同意。</b></span>
+      </label>
+      <p class="err" id="e-consent"></p>
+    </div>
+  </section>
+
+  <!-- 結果與兌換卡 -->
+  <section id="sR" hidden>
+    <div class="dreamres">
+      <div class="eyebrow">你的夢想旅程</div>
+      <h3 id="rTitle"></h3>
+      <div class="rows">
+        <div><span>每人預算</span><span class="num" id="rPer"></span></div>
+        <div><span>人數</span><span class="num" id="rPeople"></span></div>
+        <div><span>總預算</span><span class="num" id="rTotal"></span></div>
+      </div>
+      <div class="need">
+        <p>透過萌森，只需要</p>
+        <div class="big num" id="rNeed"></div>
+        <span class="save" id="rSave"></span>
+      </div>
+      <p class="fine">以回饋金最多 25% 試算：儲值金額加上回饋金，等於總預算。回饋條件以萌森公告為準。</p>
+    </div>
+
+    <div class="voucher" id="voucher">
+      <div class="vt">萌森小水手補給站｜兌換卡</div>
+      <div class="checks">
+        <div><i>✓</i>已加入萌森好友</div>
+        <div><i>✓</i>已完成旅遊問卷</div>
+      </div>
+      <div class="offer">補給組合 <span class="num">$80</span></div>
+      <div class="offer2">＋ 航海羅盤 1 次</div>
+      <div class="clock num" id="clock">--:--:--</div>
+      <div id="vAction">
+        <button type="button" class="redeem" id="redeemBtn">按下兌換</button>
+        <p class="vhint">請在櫃台前按，按下後 3 分鐘內有效</p>
+      </div>
+      <div class="vstate live" id="vLive" hidden>
+        <b>兌換成功</b>
+        <div>兌換時間 <span class="num" id="vTime"></span></div>
+        <div>有效時間剩 <span class="num" id="vLeft"></span></div>
+      </div>
+      <div class="vstate done" id="vDone" hidden>
+        <b>已兌換</b>
+        <div>兌換時間 <span class="num" id="vTime2"></span></div>
+      </div>
+    </div>
+    <p class="after">兌換後，請到旁邊的航海羅盤轉一次 🧭<br>謝謝你和萌森一起支持家扶</p>
+  </section>
+
+  <!-- 無法開啟 -->
+  <section id="sErr" hidden>
+    <div class="card" style="text-align:center;padding:28px 20px">
+      <b style="color:var(--navy);font-size:18px">請從萌森 LINE 開啟這個頁面</b>
+      <p style="color:var(--muted);margin-top:8px" id="errText">掃攤位上的 QR Code，傳送「小水手報到」，點自動回覆的按鈕就能開始。</p>
+    </div>
+  </section>
+</main>
+
+<nav class="bar" id="bar" hidden>
+  <div class="in">
+    <button type="button" class="back" id="backBtn" aria-label="上一步">‹</button>
+    <button type="button" class="next" id="nextBtn">開始填寫</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ===== 設定：上線前填這裡 ===== */
+const CONFIG = {
+  LIFF_ID: '',                                  // LIFF ID；空白＝示範模式
+  OA_ADD_FRIEND_URL: 'https://line.me/R/ti/p/@xxxxxxx', // 萌森官方帳號的加好友連結
+  API_URL: '',                                  // Google Apps Script 網址；空白＝只存在手機
+  REDEEM_VALID_SEC: 180,                        // 按下兌換後的有效秒數
+  REWARD_RATE: 0.25,                            // 回饋金最多 25%
+  // perPerson：每人參考預算（元），請萌森依實際行程提供；null＝讓客人自己填
+  DREAMS: [
+    { id: 'aurora', label: '北歐看極光',     phrase: '去北歐看極光',       emoji: '🌌', perPerson: 200000 },
+    { id: 'japan',  label: '日本賞櫻滑雪',   phrase: '去日本賞櫻滑雪',     emoji: '🌸', perPerson: null },
+    { id: 'swiss',  label: '瑞士阿爾卑斯',   phrase: '去瑞士看阿爾卑斯山', emoji: '🏔️', perPerson: null },
+    { id: 'africa', label: '非洲動物大遷徙', phrase: '去非洲看動物大遷徙', emoji: '🦒', perPerson: null },
+    { id: 'nz',     label: '紐澳自駕',       phrase: '去紐澳自駕',         emoji: '🚐', perPerson: null },
+    { id: 'other',  label: '其他，自己填',   phrase: '',                   emoji: '✏️', perPerson: null }
+  ]
+};
+const STORE_KEY = 'mengsen_bazaar_2026';
+
+/* ===== 狀態 ===== */
+const $ = s => document.querySelector(s);
+const S = {
+  demo: false, uid: '', displayName: '', idToken: '', friend: null,
+  step: 0, budgetTouched: false,
+  a: { people: 4, tripsDomestic: '', tripsOverseas: '', spend: '', nextTrip: '', dream: '' },
+  record: null
+};
+
+const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+const wan = n => { const w = n / 10000; return (Number.isInteger(w) ? w : w.toFixed(1)) + ' 萬'; };
+const pad = n => String(n).padStart(2, '0');
+const hms = d => pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+
+function toast(msg, ms = 2600) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, ms);
+}
+function loadLocal() { try { return JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (e) { return null; } }
+function saveLocal(r) { try { localStorage.setItem(STORE_KEY, JSON.stringify(r)); } catch (e) {} }
+
+/* ===== 後端 ===== */
+async function api(payload) {
+  if (!CONFIG.API_URL) return null;
+  const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(payload) });
+  return res.json();
+}
+async function apiGet(uid) {
+  if (!CONFIG.API_URL || !uid) return null;
+  const res = await fetch(CONFIG.API_URL + '?action=get&uid=' + encodeURIComponent(uid));
+  return res.json();
+}
+
+/* ===== 啟動 ===== */
+async function boot() {
+  const qs = new URLSearchParams(location.search);
+  S.demo = !CONFIG.LIFF_ID || qs.has('demo');
+  try {
+    if (S.demo) {
+      $('#demoBar').hidden = false;
+      let id = ''; try { id = localStorage.getItem(STORE_KEY + '_demo_uid') || ''; } catch (e) {}
+      if (!id) { id = 'demo-' + Math.random().toString(36).slice(2, 10); try { localStorage.setItem(STORE_KEY + '_demo_uid', id); } catch (e) {} }
+      S.uid = id; S.displayName = '示範使用者';
+      let f = '1'; try { f = localStorage.getItem(STORE_KEY + '_demo_friend') ?? '1'; } catch (e) {}
+      S.friend = f === '1';
+      paintDemo();
+    } else {
+      await loadScript('https://static.line-scdn.net/liff/edge/2/sdk.js');
+      await liff.init({ liffId: CONFIG.LIFF_ID });
+      if (!liff.isLoggedIn()) { liff.login({ redirectUri: location.href }); return; }
+      const p = await liff.getProfile();
+      S.uid = p.userId; S.displayName = p.displayName;
+      S.idToken = liff.getIDToken() || '';
+      S.friend = (await liff.getFriendship()).friendFlag;
+    }
+  } catch (err) {
+    console.error(err);
+    $('#loading').hidden = true; $('#sErr').hidden = false;
+    return;
+  }
+
+  // 同一個 LINE 帳號只有一張兌換卡
+  let rec = loadLocal();
+  if (rec && rec.uid !== S.uid) rec = null;
+  try {
+    const srv = await apiGet(S.uid);
+    if (srv && srv.ok && srv.record) rec = Object.assign({}, rec || {}, srv.record, { synced: true });
+  } catch (e) { /* 離線就用手機上的紀錄 */ }
+  if (rec) { S.record = rec; saveLocal(rec); if (!rec.synced) syncRecord(); }
+
+  buildForm();
+  $('#loading').hidden = true;
+  if (S.record) showResult(); else go(0);
+}
+function loadScript(src) {
+  return new Promise((ok, no) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+}
+
+/* ===== 示範模式 ===== */
+function paintDemo() { $('#demoFriend').textContent = '好友：' + (S.friend ? '已加入' : '未加入'); }
+$('#demoFriend').onclick = () => {
+  S.friend = !S.friend; try { localStorage.setItem(STORE_KEY + '_demo_friend', S.friend ? '1' : '0'); } catch (e) {}
+  paintDemo(); paintFriend();
+};
+$('#demoReset').onclick = () => {
+  try { localStorage.removeItem(STORE_KEY); localStorage.removeItem(STORE_KEY + '_demo_uid'); } catch (e) {}
+  location.reload();
+};
+
+/* ===== 好友狀態 ===== */
+function paintFriend() {
+  const box = $('#friendBox');
+  box.classList.remove('ok', 'no', 'wait');
+  if (S.friend) {
+    box.classList.add('ok'); $('#friendDot').textContent = '✓';
+    $('#friendTitle').textContent = '已加入萌森好友';
+    $('#friendText').textContent = (S.displayName ? S.displayName + '，' : '') + '歡迎登船！';
+    $('#friendActs').hidden = true;
+  } else {
+    box.classList.add('no'); $('#friendDot').textContent = '!';
+    $('#friendTitle').textContent = '還沒加入萌森好友';
+    $('#friendText').textContent = '加入好友後才能領取兌換卡，加好之後按「我加好了」。';
+    $('#friendActs').hidden = false;
+  }
+  if (S.step === 0) $('#nextBtn').disabled = !S.friend;
+}
+$('#addFriend').onclick = () => {
+  if (S.demo) { S.friend = true; try { localStorage.setItem(STORE_KEY + '_demo_friend', '1'); } catch (e) {} paintDemo(); paintFriend(); toast('示範：已加入好友'); return; }
+  if (window.liff && liff.isInClient()) liff.openWindow({ url: CONFIG.OA_ADD_FRIEND_URL, external: false });
+  else location.href = CONFIG.OA_ADD_FRIEND_URL;
+};
+$('#recheck').onclick = async () => {
+  if (S.demo) { paintFriend(); return; }
+  try { S.friend = (await liff.getFriendship()).friendFlag; } catch (e) {}
+  paintFriend();
+  if (!S.friend) toast('還沒看到好友紀錄，請再確認一次');
+};
+
+/* ===== 表單 ===== */
+function buildForm() {
+  const now = new Date().getFullYear();
+  const by = $('#by'), bm = $('#bm'), bd = $('#bd');
+  for (let y = now - 12; y >= 1940; y--) by.add(new Option(y + ' 年', y));
+  for (let m = 1; m <= 12; m++) bm.add(new Option(m + ' 月', m));
+  for (let d = 1; d <= 31; d++) bd.add(new Option(d + ' 日', d));
+
+  document.querySelectorAll('.chips').forEach(box => {
+    const key = box.dataset.key;
+    box.setAttribute('role', 'group');
+    box.dataset.opts.split('|').forEach(opt => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.textContent = opt; b.setAttribute('aria-pressed', 'false');
+      b.onclick = () => {
+        S.a[key] = opt;
+        box.querySelectorAll('.chip').forEach(c => c.setAttribute('aria-pressed', String(c === b)));
+        box.classList.remove('bad');
+        const e = $('#e-' + (key.startsWith('trips') ? 'trips' : key)); if (e) e.textContent = '';
+      };
+      box.appendChild(b);
+    });
+  });
+
+  const people = () => { $('#people').textContent = S.a.people + ' 人'; $('#pMinus').disabled = S.a.people <= 1; $('#pPlus').disabled = S.a.people >= 12; updateLive(); };
+  $('#pMinus').onclick = () => { if (S.a.people > 1) S.a.people--; people(); };
+  $('#pPlus').onclick = () => { if (S.a.people < 12) S.a.people++; people(); };
+  people();
+
+  const wrap = $('#dreams');
+  CONFIG.DREAMS.forEach(d => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'dream'; b.setAttribute('aria-pressed', 'false'); b.dataset.id = d.id;
+    b.innerHTML = '<span class="em">' + d.emoji + '</span><span><b>' + d.label + '</b><br><small>' + (d.perPerson ? '每人約 ' + wan(d.perPerson) : '預算自己填') + '</small></span>';
+    b.onclick = () => pickDream(d);
+    wrap.appendChild(b);
+  });
+
+  $('#budget').addEventListener('input', () => { S.budgetTouched = true; clearErr('budget'); updateLive(); });
+  $('#dreamOther').addEventListener('input', () => clearErr('other'));
+  ['name', 'phone'].forEach(id => $('#' + id).addEventListener('input', () => clearErr(id)));
+  ['by', 'bm', 'bd'].forEach(id => $('#' + id).addEventListener('change', () => clearErr('bday')));
+  $('#consent').addEventListener('change', () => { $('#consentBox').classList.remove('bad'); $('#e-consent').textContent = ''; });
+}
+function clearErr(k) {
+  const e = $('#e-' + k); if (e) e.textContent = '';
+  const f = { name: '#name', phone: '#phone', budget: '#budget', other: '#dreamOther' }[k];
+  if (f) $(f).classList.remove('bad');
+  if (k === 'bday') ['#by', '#bm', '#bd'].forEach(s => $(s).classList.remove('bad'));
+}
+function pickDream(d) {
+  S.a.dream = d.id;
+  document.querySelectorAll('.dream').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === d.id)));
+  $('#dreams').classList.remove('bad'); $('#e-dream').textContent = '';
+  $('#budgetBox').hidden = false;
+  $('#otherBox').hidden = d.id !== 'other';
+  $('#budgetHint').textContent = d.perPerson ? '已帶入參考預算，可以自己改' : '';
+  if (!S.budgetTouched || !$('#budget').value) {
+    $('#budget').value = d.perPerson ? String(d.perPerson / 10000) : '';
+    S.budgetTouched = false;
+  }
+  updateLive();
+  // 預算欄出現在選項下方，捲過去讓客人看到
+  requestAnimationFrame(() => $('#budgetBox').scrollIntoView({ behavior: 'smooth', block: 'center' }));
+}
+function budgetValue() {
+  const v = parseFloat(String($('#budget').value).replace(/[^\d.]/g, ''));
+  return isFinite(v) && v > 0 ? Math.round(v * 10000) : 0;
+}
+function calc(per, people) {
+  const total = per * people;
+  const need = Math.round(total / (1 + CONFIG.REWARD_RATE));
+  return { total, need, save: total - need };
+}
+function updateLive() {
+  const per = budgetValue();
+  const el = $('#live');
+  if (!el || !per || !S.a.dream) { if (el) el.textContent = ''; return; }
+  const c = calc(per, S.a.people);
+  el.innerHTML = S.a.people + ' 人 × 每人 ' + wan(per) + '＝總預算 <span class="num">' + fmt(c.total) + '</span>';
+}
+
+/* ===== 驗證 ===== */
+function fail(key, msg, fieldSel) {
+  $('#e-' + key).textContent = msg;
+  if (fieldSel) $(fieldSel).classList.add('bad');
+  return false;
+}
+function validate(step) {
+  let ok = true;
+  if (step === 1) {
+    const name = $('#name').value.trim();
+    if (!name) ok = fail('name', '請填寫姓名', '#name');
+    const phone = $('#phone').value.replace(/[\s-]/g, '');
+    $('#phone').value = phone;
+    if (!/^09\d{8}$/.test(phone)) ok = fail('phone', '請填 09 開頭的 10 碼手機號碼', '#phone');
+    const y = +$('#by').value, m = +$('#bm').value, d = +$('#bd').value;
+    const dt = new Date(y, m - 1, d);
+    if (!y || !m || !d || dt.getMonth() !== m - 1) {
+      ok = fail('bday', y && m && d ? '這個日期不存在，請再確認' : '請選擇出生年月日');
+      ['#by', '#bm', '#bd'].forEach(s => { if (!$(s).value || (y && m && d)) $(s).classList.add('bad'); });
+    }
+  }
+  if (step === 2) {
+    if (!S.a.tripsDomestic || !S.a.tripsOverseas) {
+      ok = fail('trips', '國內和國外各選一個');
+      if (!S.a.tripsDomestic) document.querySelector('[data-key=tripsDomestic]').classList.add('bad');
+      if (!S.a.tripsOverseas) document.querySelector('[data-key=tripsOverseas]').classList.add('bad');
+    }
+    ['spend', 'nextTrip'].forEach(k => {
+      if (!S.a[k]) { ok = fail(k, '請選一個'); document.querySelector('[data-key=' + k + ']').classList.add('bad'); }
+    });
+  }
+  if (step === 3) {
+    if (!S.a.dream) { ok = fail('dream', '請選一個夢想目的地'); $('#dreams').classList.add('bad'); }
+    else {
+      if (S.a.dream === 'other' && !$('#dreamOther').value.trim()) ok = fail('other', '請填寫想去的地方', '#dreamOther');
+      const per = budgetValue();
+      if (!per) ok = fail('budget', '請填每人預算，單位是萬', '#budget');
+      else if (per > 10000000) ok = fail('budget', '每人預算請填 1000 萬以內', '#budget');
+    }
+    if (!$('#consent').checked) { ok = fail('consent', '請勾選同意後再送出'); $('#consentBox').classList.add('bad'); }
+  }
+  if (!ok) {
+    const first = document.querySelector('#s' + step + ' .err:not(:empty)');
+    if (first) first.closest('.q').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  return ok;
+}
+
+/* ===== 換頁 ===== */
+const NEXT_LABEL = ['開始填寫', '下一步', '下一步', '送出，看我的夢想試算'];
+function go(step) {
+  S.step = step;
+  ['#s0', '#s1', '#s2', '#s3', '#sR'].forEach((s, i) => { $(s).hidden = i !== step; });
+  $('#s' + step).classList.remove('fade'); void $('#s' + step).offsetWidth; $('#s' + step).classList.add('fade');
+  $('#bar').hidden = false; $('#wrap').classList.remove('no-bar');
+  $('#backBtn').hidden = step === 0;
+  $('#nextBtn').textContent = NEXT_LABEL[step];
+  $('#nextBtn').disabled = step === 0 && !S.friend;
+  if (step === 0) paintFriend();
+  window.scrollTo({ top: 0 });
+}
+$('#backBtn').onclick = () => { if (S.step > 0) go(S.step - 1); };
+$('#nextBtn').onclick = () => {
+  if (S.step === 0) { if (S.friend) go(1); return; }
+  if (!validate(S.step)) return;
+  if (S.step < 3) go(S.step + 1); else submit();
+};
+
+/* ===== 送出 ===== */
+async function submit() {
+  if (!S.friend) { toast('請先加入萌森好友'); go(0); return; }
+  const btn = $('#nextBtn'); btn.disabled = true; btn.textContent = '送出中…';
+  const d = CONFIG.DREAMS.find(x => x.id === S.a.dream);
+  const other = $('#dreamOther').value.trim();
+  const per = budgetValue();
+  const c = calc(per, S.a.people);
+  const rec = {
+    id: 'R' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 5).toUpperCase(),
+    uid: S.uid, displayName: S.displayName,
+    name: $('#name').value.trim(), phone: $('#phone').value,
+    birthday: $('#by').value + '-' + pad($('#bm').value) + '-' + pad($('#bd').value),
+    people: S.a.people, tripsDomestic: S.a.tripsDomestic, tripsOverseas: S.a.tripsOverseas,
+    spend: S.a.spend, nextTrip: S.a.nextTrip,
+    dream: d.id === 'other' ? other : d.label,
+    dreamPhrase: d.id === 'other' ? '去' + other : d.phrase,
+    perPerson: per, total: c.total, need: c.need, save: c.save,
+    consent: true, submittedAt: new Date().toISOString(), redeemedAt: null, synced: false
+  };
+  S.record = rec; saveLocal(rec);
+  await syncRecord();
+  showResult();
+}
+async function syncRecord() {
+  const rec = S.record;
+  if (!rec || !CONFIG.API_URL) return;
+  try {
+    const r = await api({ action: 'submit', idToken: S.idToken, record: rec });
+    if (r && r.ok) {
+      if (r.record) Object.assign(rec, r.record);
+      rec.synced = true; saveLocal(rec);
+    }
+  } catch (e) { /* 網路不穩時先存在手機，下次開啟再補送 */ }
+}
+
+/* ===== 結果與兌換 ===== */
+function showResult() {
+  const r = S.record;
+  ['#s0', '#s1', '#s2', '#s3'].forEach(s => $(s).hidden = true);
+  $('#sR').hidden = false; $('#bar').hidden = true; $('#wrap').classList.add('no-bar');
+  // 換手機開啟時只有後端資料，用目的地名稱補回說法
+  const phrase = r.dreamPhrase || (CONFIG.DREAMS.find(x => x.label === r.dream) || {}).phrase || '去' + r.dream;
+  $('#rTitle').textContent = (r.people > 1 ? '全家 ' + r.people + ' 人' : '一個人') + phrase;
+  $('#rPer').textContent = fmt(r.perPerson);
+  $('#rPeople').textContent = r.people + ' 人';
+  $('#rTotal').textContent = fmt(r.total);
+  $('#rNeed').textContent = fmt(r.need);
+  $('#rSave').textContent = '省下 ' + fmt(r.save) + '，離夢想更近一步';
+  paintVoucher();
+  window.scrollTo({ top: 0 });
+  if (r.redeemedAt) $('#voucher').scrollIntoView({ block: 'start' });
+}
+function paintVoucher() {
+  const r = S.record; if (!r) return;
+  const now = new Date();
+  $('#clock').textContent = hms(now);
+  if (!r.redeemedAt) { $('#vAction').hidden = false; $('#vLive').hidden = true; $('#vDone').hidden = true; return; }
+  const at = new Date(r.redeemedAt);
+  const left = CONFIG.REDEEM_VALID_SEC - Math.floor((now - at) / 1000);
+  $('#vAction').hidden = true;
+  if (left > 0) {
+    $('#vLive').hidden = false; $('#vDone').hidden = true;
+    $('#vTime').textContent = hms(at);
+    $('#vLeft').textContent = Math.floor(left / 60) + ':' + pad(left % 60);
+  } else {
+    $('#vLive').hidden = true; $('#vDone').hidden = false;
+    $('#vTime2').textContent = at.getMonth() + 1 + '/' + at.getDate() + ' ' + hms(at).slice(0, 5);
+  }
+}
+$('#redeemBtn').onclick = async () => {
+  const r = S.record; if (!r || r.redeemedAt) return;
+  r.redeemedAt = new Date().toISOString(); saveLocal(r); paintVoucher();
+  if (!CONFIG.API_URL) return;
+  try {
+    if (!r.synced) await syncRecord();
+    const res = await api({ action: 'redeem', id: r.id, uid: r.uid, redeemedAt: r.redeemedAt });
+    if (res && res.ok && res.redeemedAt && res.redeemedAt !== r.redeemedAt) { r.redeemedAt = res.redeemedAt; saveLocal(r); paintVoucher(); }
+  } catch (e) { /* 兌換以手機上的時間為準 */ }
+};
+setInterval(() => { if (!$('#sR').hidden) paintVoucher(); }, 1000);
+
+boot();
+</script>
+</body>
+</html>
