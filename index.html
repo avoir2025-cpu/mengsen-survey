@@ -137,7 +137,14 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
 .need p{font-size:15px;color:#D6E3EE}
 .need .big{font-size:46px;line-height:1.1;color:var(--orange);margin:2px 0 6px}
 .need .save{display:inline-block;background:rgba(242,154,79,.18);color:var(--sand);border-radius:999px;padding:4px 12px;font-size:14px;font-weight:700}
-.fine{font-size:12px;color:#9DB3C6;margin-top:12px;position:relative}
+.nowres{background:var(--paper);border:1px solid var(--line);border-radius:24px;padding:22px 20px;margin-bottom:14px}
+.nowres .eyebrow{font-size:13px;font-weight:700;color:var(--blue);letter-spacing:.1em;margin-bottom:10px}
+.nowres .rows{color:var(--muted)}
+.nowres .rows .num{color:var(--navy)}
+.nowres .need{border-top-color:#E3DCCD}
+.nowres .need p{color:var(--muted)}
+.nowres .need .big{color:var(--orange-d);font-size:40px}
+.nowres .save{background:#FBF0D6;color:var(--orange-d)}
 
 .voucher{margin-top:16px;background:#fff;border:3px solid var(--navy);border-radius:26px;padding:20px 18px;scroll-margin-top:16px}
 .voucher .vt{font-size:13px;font-weight:700;color:var(--blue);letter-spacing:.06em}
@@ -300,6 +307,20 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
 
   <!-- 結果與兌換卡 -->
   <section id="sR" hidden>
+    <div class="nowres" id="nowRes">
+      <div class="eyebrow">你家現在的旅行</div>
+      <div class="rows">
+        <div><span>一年出遊</span><span class="num" id="nTrips"></span></div>
+        <div><span>每次平均約</span><span class="num" id="nPer"></span></div>
+        <div><span>一年旅費約</span><span class="num" id="nYear"></span></div>
+      </div>
+      <div class="need">
+        <p>透過萌森，一年只需要</p>
+        <div class="big num" id="nNeed"></div>
+        <span class="save" id="nSave"></span>
+      </div>
+    </div>
+
     <div class="dreamres">
       <div class="eyebrow">你的夢想旅程</div>
       <h3 id="rTitle"></h3>
@@ -313,7 +334,6 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
         <div class="big num" id="rNeed"></div>
         <span class="save" id="rSave"></span>
       </div>
-      <p class="fine">以回饋金最多 25% 試算：儲值金額加上回饋金，等於總預算。回饋條件以萌森公告為準。</p>
     </div>
 
     <div class="voucher" id="voucher">
@@ -368,6 +388,8 @@ const CONFIG = {
   API_URL: '',                                  // Google Apps Script 網址；空白＝只存在手機
   REDEEM_VALID_SEC: 180,                        // 按下兌換後的有效秒數
   REWARD_RATE: 0.25,                            // 回饋金最多 25%
+  // 第 6 題「每次出遊平均花多少」各區間的試算代表值（元）
+  SPEND_MID: { '1 萬以下': 8000, '1–3 萬': 20000, '3–5 萬': 40000, '5–10 萬': 75000, '10 萬以上': 120000 },
   // 目的地＝Hotels.com 國人「此生必遊」前 10 名（OnePoll 2017 調查）
   // perPerson：每人參考預算（元），依 2026/10 雄獅旅遊同類團費取整；萌森可換成自家行程價
   DREAMS: [
@@ -703,6 +725,18 @@ function showResult() {
   $('#rTotal').textContent = fmt(r.total);
   $('#rNeed').textContent = fmt(r.need);
   $('#rSave').textContent = '省下 ' + fmt(r.save) + '，離夢想更近一步';
+  // 現在的旅行：一年次數 × 每次平均花費
+  const trips = (parseInt(r.tripsDomestic, 10) || 0) + (parseInt(r.tripsOverseas, 10) || 0);
+  const perTrip = CONFIG.SPEND_MID[r.spend] || 0;
+  $('#nowRes').hidden = !(trips && perTrip);
+  if (trips && perTrip) {
+    const y = calc(perTrip, trips);
+    $('#nTrips').textContent = trips + ' 次';
+    $('#nPer').textContent = fmt(perTrip);
+    $('#nYear').textContent = fmt(y.total);
+    $('#nNeed').textContent = fmt(y.need);
+    $('#nSave').textContent = '每年省下 ' + fmt(y.save);
+  }
   paintVoucher();
   window.scrollTo({ top: 0 });
   if (r.redeemedAt) $('#voucher').scrollIntoView({ block: 'start' });

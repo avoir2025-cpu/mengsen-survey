@@ -42,7 +42,7 @@ function publicRecord_(sh, row) {
   const v = sh.getRange(row, 1, 1, HEADERS.length).getDisplayValues()[0];
   return {
     id: v[1], uid: v[2],
-    people: Number(v[7]), dream: v[12],
+    people: Number(v[7]), tripsDomestic: v[8], tripsOverseas: v[9], spend: v[10], dream: v[12],
     perPerson: Number(v[13]), total: Number(v[14]), need: Number(v[15]),
     save: Number(v[14]) - Number(v[15]),
     redeemedAt: toIso_(v[17])
