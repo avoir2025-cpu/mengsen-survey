@@ -9,9 +9,10 @@ const TZ = 'Asia/Taipei';
 const HEADERS = [
   '送出時間', '紀錄ID', 'LINE userId', 'LINE 名稱', '姓名', '手機', '生日',
   '出遊人數', '國內次數/年', '國外次數/年', '每次出遊花費', '下一趟出發',
-  '夢想目的地', '每人預算', '總預算', '透過萌森只需儲值', '個資同意', '兌換時間'
+  '夢想目的地', '每人預算', '總預算', '透過萌森只需儲值', '個資同意', '購買雞蛋仔時間', '領券時間'
 ];
-const COL = { id: 2, uid: 3, redeemedAt: 18 };
+// redeemedAt＝按「購買雞蛋仔」的時間（沿用原本的兌換欄）；couponAt＝按「領取兌換券」的時間
+const COL = { id: 2, uid: 3, phone: 6, redeemedAt: 18, couponAt: 19 };
 
 function sheet_() {
   const ss = SpreadsheetApp.getActive();
@@ -21,8 +22,11 @@ function sheet_() {
     sh.appendRow(HEADERS);
     sh.setFrozenRows(1);
   }
+  // 舊表只有 18 欄，補上「領券時間」欄名
+  if (sh.getRange(1, COL.couponAt).getValue() === '') sh.getRange(1, COL.couponAt).setValue(HEADERS[COL.couponAt - 1]);
   return sh;
 }
+function digits_(v) { return String(v == null ? '' : v).replace(/\D/g, ''); }
 function json_(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -45,7 +49,7 @@ function publicRecord_(sh, row) {
     people: Number(v[7]), tripsDomestic: v[8], tripsOverseas: v[9], spend: v[10], dream: v[12],
     perPerson: Number(v[13]), total: Number(v[14]), need: Number(v[15]),
     save: Number(v[14]) - Number(v[15]),
-    redeemedAt: toIso_(v[17])
+    redeemedAt: toIso_(v[17]), couponAt: toIso_(v[18])
   };
 }
 
@@ -68,8 +72,8 @@ function doGet(e) {
   }
   if (p.action === 'stats') {
     const n = Math.max(sh.getLastRow() - 1, 0);
-    const redeemed = n ? sh.getRange(2, COL.redeemedAt, n, 1).getValues().filter(r => r[0] !== '').length : 0;
-    return json_({ ok: true, submitted: n, redeemed: redeemed });
+    const count = c => n ? sh.getRange(2, c, n, 1).getValues().filter(r => r[0] !== '').length : 0;
+    return json_({ ok: true, submitted: n, redeemed: count(COL.redeemedAt), coupons: count(COL.couponAt) });
   }
   return json_({ ok: false, error: 'unknown action' });
 }
@@ -88,13 +92,17 @@ function doPost(e) {
 
       const exist = findRow_(sh, COL.uid, r.uid);
       if (exist) return json_({ ok: true, existed: true, record: publicRecord_(sh, exist) });
+      // 沒接 LINE 登入時，同一支手機號碼只能有一張兌換卡：填過的直接回原本那張
+      const samePhone = digits_(r.phone) ? findRow_(sh, COL.phone, digits_(r.phone)) : 0;
+      if (samePhone) return json_({ ok: true, existed: true, byPhone: true, record: publicRecord_(sh, samePhone) });
 
       sh.appendRow([
         fmt_(new Date(r.submittedAt || Date.now())), r.id, r.uid, r.displayName,
-        r.name, text_(r.phone), text_(r.birthday),
+        r.name, text_(digits_(r.phone)), text_(r.birthday),
         r.people, r.tripsDomestic, r.tripsOverseas, r.spend, r.nextTrip,
         r.dream, r.perPerson, r.total, r.need, r.consent ? '同意' : '',
-        r.redeemedAt ? text_(fmt_(new Date(r.redeemedAt))) : ''
+        r.redeemedAt ? text_(fmt_(new Date(r.redeemedAt))) : '',
+        r.couponAt ? text_(fmt_(new Date(r.couponAt))) : ''
       ]);
       return json_({ ok: true, record: publicRecord_(sh, sh.getLastRow()) });
     }
@@ -105,6 +113,14 @@ function doPost(e) {
       const cell = sh.getRange(row, COL.redeemedAt);
       if (!cell.getDisplayValue()) cell.setValue(text_(fmt_(new Date(body.redeemedAt || Date.now()))));
       return json_({ ok: true, redeemedAt: toIso_(cell.getDisplayValue()) });
+    }
+
+    if (body.action === 'coupon') {
+      const row = findRow_(sh, COL.id, body.id);
+      if (!row) return json_({ ok: false, error: 'not found' });
+      const cell = sh.getRange(row, COL.couponAt);
+      if (!cell.getDisplayValue()) cell.setValue(text_(fmt_(new Date(body.couponAt || Date.now()))));
+      return json_({ ok: true, couponAt: toIso_(cell.getDisplayValue()) });
     }
 
     return json_({ ok: false, error: 'unknown action' });

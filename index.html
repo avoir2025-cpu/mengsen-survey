@@ -172,11 +172,13 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
 .redeem{width:100%;height:58px;border-radius:999px;background:var(--gold);color:var(--navy);font-size:19px;font-weight:900;box-shadow:0 6px 16px rgba(168,111,18,.28)}
 .redeem:active{transform:scale(.98)}
 .vhint{text-align:center;font-size:13px;color:var(--muted);margin-top:8px}
-.vstate{border-radius:16px;padding:14px;text-align:center}
-.vstate.live{background:#E6F4EC;color:var(--ok)}
+.vrow{border-top:1px dashed var(--line);padding:12px 0}
+.vrow .vl{font-size:17px;font-weight:700;color:var(--navy);margin-bottom:8px}
+.vrow .vl .num{color:var(--orange-d)}
+.vstate{border-radius:16px;padding:12px;text-align:center;height:58px;display:flex;align-items:center;justify-content:center;gap:12px}
 .vstate.done{background:#ECEFF2;color:var(--muted)}
-.vstate b{display:block;font-size:20px}
-.vstate .num{font-size:22px}
+.vstate b{font-size:18px}
+.vstate .num{font-size:18px}
 .after{margin-top:16px;font-size:14px;color:var(--muted);text-align:center}
 .retest{display:block;margin:16px auto 0;font-size:14px;padding:8px 16px}
 
@@ -355,32 +357,28 @@ h2.title{font-size:26px;line-height:1.3;font-weight:900;color:var(--navy);margin
         <div><i>✓</i>已加入萌森好友</div>
         <div><i>✓</i>已完成旅遊問卷</div>
       </div>
-      <div class="offer">補給套餐 <span class="num">$80</span></div>
-      <div class="offer2">＋ 航海羅盤 1 次</div>
       <div class="clock num" id="clock">--:--:--</div>
-      <div id="vAction">
-        <button type="button" class="redeem" id="redeemBtn">按下兌換</button>
-        <p class="vhint">請在櫃台前按，按下後 3 分鐘內有效</p>
+      <div class="vrow">
+        <div class="vl">🧭 航海羅盤 1 次</div>
+        <button type="button" class="redeem" id="couponBtn">領取兌換券</button>
+        <div class="vstate done" id="couponDone" hidden><b>已領取兌換券</b><span class="num" id="couponTime"></span></div>
       </div>
-      <div class="vstate live" id="vLive" hidden>
-        <b>兌換成功</b>
-        <div>兌換時間 <span class="num" id="vTime"></span></div>
-        <div>有效時間剩 <span class="num" id="vLeft"></span></div>
+      <div class="vrow">
+        <div class="vl">🧇 補給套餐 <span class="num">$80</span></div>
+        <button type="button" class="redeem" id="redeemBtn">購買雞蛋仔</button>
+        <div class="vstate done" id="vDone" hidden><b>已購買雞蛋仔</b><span class="num" id="vTime2"></span></div>
       </div>
-      <div class="vstate done" id="vDone" hidden>
-        <b>已兌換</b>
-        <div>兌換時間 <span class="num" id="vTime2"></span></div>
-      </div>
+      <p class="vhint">請工作人員按，每顆按鈕只能按一次</p>
     </div>
     <button type="button" class="btn-ghost retest" id="retest" hidden>重新填一份（測試期間）</button>
-    <p class="after">兌換後，櫃台會給你一張羅盤兌換券<br>拿到旁邊的航海羅盤轉一次 🧭<br>謝謝你和萌森一起支持家扶</p>
+    <p class="after">工作人員會給你一張羅盤兌換券，拿到旁邊的航海羅盤轉一次 🧭<br>買雞蛋仔套餐時，給櫃台看這張兌換卡就是 $80<br>謝謝你和萌森一起支持家扶</p>
   </section>
 
   <!-- 無法開啟 -->
   <section id="sErr" hidden>
     <div class="card" style="text-align:center;padding:28px 20px">
       <b style="color:var(--navy);font-size:18px">請從萌森 LINE 開啟這個頁面</b>
-      <p style="color:var(--muted);margin-top:8px" id="errText">掃攤位上的 QR Code，傳送「小水手報到」，點自動回覆的按鈕就能開始。</p>
+      <p style="color:var(--muted);margin-top:8px" id="errText">掃攤位上的 QR Code，傳送「小水手報到！」，點自動回覆的按鈕就能開始。</p>
     </div>
   </section>
 </main>
@@ -400,8 +398,7 @@ const CONFIG = {
   LIFF_ID: '',                                  // LIFF ID；空白＝示範模式
   OA_ADD_FRIEND_URL: 'https://line.me/R/ti/p/%40779rizhy', // 萌森官方帳號 @779rizhy 的加好友連結
   API_URL: 'https://script.google.com/macros/s/AKfycbxrEfN74Sug78vyx10oJacK_pmJBFHV48a6Cl_enh-kV1fiZKTAnX30iFJneWVjkTnCIw/exec', // Google Apps Script 網址；空白＝只存在手機
-  REDEEM_VALID_SEC: 180,                        // 按下兌換後的有效秒數
-  REWARD_RATE: 0.25,                            // 回饋金最多 25%
+  REWARD_RATE: 0.20,                            // 回饋金最多 20%（萌森 11/11 更正）
   // 第 6 題「每次出遊平均花多少」各區間的試算代表值（元）
   SPEND_MID: { '1 萬以下': 8000, '1–3 萬': 20000, '3–5 萬': 40000, '5–10 萬': 75000, '10 萬以上': 120000 },
   // 目的地＝Hotels.com 國人「此生必遊」前 10 名（OnePoll 2017 調查）
@@ -508,9 +505,12 @@ async function boot() {
     if (srv && srv.ok && srv.record) {
       const hadRecord = !!S.record;
       const localRedeemed = S.record && S.record.redeemedAt;
+      const localCoupon = S.record && S.record.couponAt, localCouponSynced = S.record && S.record.couponSynced;
       S.record = Object.assign({}, S.record || {}, srv.record, { synced: true });
       if (srv.record.redeemedAt) S.record.redeemSynced = true;
       else if (localRedeemed) { S.record.redeemedAt = localRedeemed; S.record.redeemSynced = false; syncRecord(); }
+      if (srv.record.couponAt) S.record.couponSynced = true;
+      else if (localCoupon) { S.record.couponAt = localCoupon; S.record.couponSynced = !!localCouponSynced; if (!localCouponSynced) syncRecord(); }
       saveLocal(S.record);
       if (hadRecord) paintVoucher(); else showResult();
     }
@@ -750,18 +750,31 @@ async function syncRecord() {
   syncRecord.busy = true;
   try { await syncOnce(rec); } finally { syncRecord.busy = false; }
 }
-function needsSync(rec) { return rec && (!rec.synced || (rec.redeemedAt && !rec.redeemSynced)); }
+function needsSync(rec) {
+  return rec && (!rec.synced || (rec.redeemedAt && !rec.redeemSynced) || (rec.couponAt && !rec.couponSynced));
+}
 async function syncOnce(rec) {
   try {
     if (!rec.synced) {
-      const localRedeemed = rec.redeemedAt;
+      const localRedeemed = rec.redeemedAt, localCoupon = rec.couponAt;
       const r = await api({ action: 'submit', idToken: S.idToken, record: rec });
       if (!(r && r.ok)) return;
-      if (r.record) Object.assign(rec, r.record);
-      if (localRedeemed && !rec.redeemedAt) rec.redeemedAt = localRedeemed; // 送出途中按了兌換，以手機為準
+      if (r.record) Object.assign(rec, r.record, { uid: rec.uid });
+      if (r.byPhone) { saveLocal(rec); showResult(); toast('這支手機號碼填過了，這是你原本的兌換卡', 4000); }
+      if (localRedeemed && !rec.redeemedAt) rec.redeemedAt = localRedeemed; // 送出途中按了按鈕，以手機為準
+      if (localCoupon && !rec.couponAt) rec.couponAt = localCoupon;
       rec.synced = true;
       if (r.record && r.record.redeemedAt) rec.redeemSynced = true;
+      if (r.record && r.record.couponAt) rec.couponSynced = true;
       saveLocal(rec);
+    }
+    if (rec.couponAt && !rec.couponSynced) {
+      const res = await api({ action: 'coupon', id: rec.id, uid: rec.uid, couponAt: rec.couponAt });
+      // 舊版後端沒有 coupon 動作時，只記在手機上，不再重送
+      if (res && (res.ok || res.error === 'unknown action')) {
+        if (res.couponAt) rec.couponAt = res.couponAt;
+        rec.couponSynced = true; saveLocal(rec);
+      }
     }
     if (rec.redeemedAt && !rec.redeemSynced) {
       const res = await api({ action: 'redeem', id: rec.id, uid: rec.uid, redeemedAt: rec.redeemedAt });
@@ -799,32 +812,33 @@ function showResult() {
     $('#nSave').textContent = fmt(y.save);
     $('#nNeed').textContent = '一年只要 ' + fmt(y.need);
   }
-  $('#retest').hidden = !S.demo;
+  // 「重新填一份」只在網址加 ?demo 測試時出現，現場客人看不到
+  $('#retest').hidden = !(S.demo && new URLSearchParams(location.search).has('demo'));
   paintVoucher();
   window.scrollTo({ top: 0 });
   if (r.redeemedAt) $('#voucher').scrollIntoView({ block: 'start' });
 }
+// 兩顆按鈕各按一次：領取羅盤兌換券（couponAt）、購買雞蛋仔 $80（redeemedAt，沿用原本的兌換欄）
+function stamp(iso) { const at = new Date(iso); return at.getMonth() + 1 + '/' + at.getDate() + ' ' + hms(at).slice(0, 5); }
 function paintVoucher() {
   const r = S.record; if (!r) return;
-  const now = new Date();
-  $('#clock').textContent = hms(now);
-  if (!r.redeemedAt) { $('#vAction').hidden = false; $('#vLive').hidden = true; $('#vDone').hidden = true; return; }
-  const at = new Date(r.redeemedAt);
-  const left = CONFIG.REDEEM_VALID_SEC - Math.floor((now - at) / 1000);
-  $('#vAction').hidden = true;
-  if (left > 0) {
-    $('#vLive').hidden = false; $('#vDone').hidden = true;
-    $('#vTime').textContent = hms(at);
-    $('#vLeft').textContent = Math.floor(left / 60) + ':' + pad(left % 60);
-  } else {
-    $('#vLive').hidden = true; $('#vDone').hidden = false;
-    $('#vTime2').textContent = at.getMonth() + 1 + '/' + at.getDate() + ' ' + hms(at).slice(0, 5);
-  }
+  $('#clock').textContent = hms(new Date());
+  $('#couponBtn').hidden = !!r.couponAt; $('#couponDone').hidden = !r.couponAt;
+  if (r.couponAt) $('#couponTime').textContent = stamp(r.couponAt);
+  $('#redeemBtn').hidden = !!r.redeemedAt; $('#vDone').hidden = !r.redeemedAt;
+  if (r.redeemedAt) $('#vTime2').textContent = stamp(r.redeemedAt);
 }
-$('#redeemBtn').onclick = async () => {
+$('#couponBtn').onclick = () => {
+  const r = S.record; if (!r || r.couponAt) return;
+  if (!confirm('確定要領取羅盤兌換券嗎？按下後就不能再按。')) return;
+  r.couponAt = new Date().toISOString(); r.couponSynced = false; saveLocal(r); paintVoucher();
+  syncRecord();
+};
+$('#redeemBtn').onclick = () => {
   const r = S.record; if (!r || r.redeemedAt) return;
+  if (!confirm('確定要用 $80 購買雞蛋仔套餐嗎？按下後就不能再按。')) return;
   r.redeemedAt = new Date().toISOString(); r.redeemSynced = false; saveLocal(r); paintVoucher();
-  syncRecord(); // 兌換以手機上的時間為準，背景送到試算表
+  syncRecord(); // 以手機上的時間為準，背景送到試算表
 };
 setInterval(() => { if (!$('#sR').hidden) paintVoucher(); }, 1000);
 // 還沒送進試算表的，每 20 秒再試一次
